@@ -1,0 +1,13 @@
+Package: jp.ashikase.showcase
+Name: ShowCase
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Make keyboard show current case.
+Homepage: http://github/ashikase/showcase
+Depiction: http://moreinfo.thebigboss.org/moreinfo/user_depictions/ashikase/jp.ashikase.showcase.php
+Maintainer: BigBoss <bigboss@thebigboss.org>
+Author: Lance Fetters (ashikase) <gaizin@gmail.com>
+Section: Tweaks
+Depends: mobilesubstrate
+dev: ashikase
+Sponsor: thebigboss.org <http://thebigboss.org>
