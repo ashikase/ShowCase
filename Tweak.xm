@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2011-02-12 16:33:54
+ * Last-modified: 2011-03-01 00:45:25
  */
 
 
@@ -56,9 +56,11 @@ static inline void updateKeyplaneView(id object)
     // Force keys to redraw to prevent cached uppercase letters from showing
     // FIXME: Determine why redraw is needed and prevent this need.
     UIKeyboardImpl *impl = [objc_getClass("UIKeyboardImpl") activeInstance];
-    UIKeyboardLayout *m_layout = MSHookIvar<UIKeyboardLayout *>(impl, "m_layout");
-    if ([m_layout isKindOfClass:objc_getClass("UIKeyboardLayoutStar")])
-        updateKeyplaneView(m_layout);
+    if (impl != nil) {
+        UIKeyboardLayout *m_layout = MSHookIvar<UIKeyboardLayout *>(impl, "m_layout");
+        if ([m_layout isKindOfClass:objc_getClass("UIKeyboardLayoutStar")])
+            updateKeyplaneView(m_layout);
+    }
 }
 
 %end
