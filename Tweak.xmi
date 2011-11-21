@@ -1,0 +1,192 @@
+/**
+ * Name: ShowCase
+ * Type: iOS SpringBoard extension (MobileSubstrate-based)
+ * Desc: Make keyboard show current case.
+ *
+ * Author: Lance Fetters (aka. ashikase)
+ * License: New BSD (See LICENSE file for details)
+ *
+ * Last-modified: 2011-11-06 19:58:04
+ */
+
+
+#include <objc/runtime.h>
+
+// Class declarations
+// NOTE: These are not 100% accurate; protocol information has been stripped,
+//       and super classes may change between firmware versions.
+@interface CALayer : NSObject
+- (void)_display;
+@end
+
+@interface CPBitmapStore : NSObject
+- (id)allGroups;
+- (void)removeImagesInGroups:(id)groups;
+@end
+
+// 4.2.1+
+@interface UIKeyboardCache : NSObject
++ (id)sharedInstance;
+@end
+
+@interface UIKeyboardImpl : UIView
++ (id)activeInstance;
+@end
+
+@interface UIKeyboardLayout : UIView @end
+@interface UIKeyboardLayoutStar : UIKeyboardLayout
+@property(assign, nonatomic) BOOL shift;
+@end
+
+@interface UIKBKeyplaneView : UIView @end
+@interface UIKBKeyplaneView (Firmware5x)
+@property(assign, nonatomic) UIKeyboardLayoutStar *layout;
+@end
+
+@interface UIKBShape : NSObject @end
+@interface UIKBKey : UIKBShape
+@property(copy, nonatomic) NSString *name;
+@end
+
+// 5.x
+@interface UIKBTree : NSObject
+@property(copy, nonatomic) NSString *name;
+@end
+
+//==============================================================================
+
+static inline void updateKeyplaneView(id object)
+{
+    UIKBKeyplaneView *_keyplaneView = NULL;
+    if (object_getInstanceVariable(object, "_keyplaneView", (void **)&_keyplaneView) == NULL)
+        object_getInstanceVariable(object, "m_keyplaneView", (void **)&_keyplaneView);
+    [_keyplaneView setNeedsDisplay];
+}
+
+//==============================================================================
+
+%hook UIKeyboard %group GFirmware4x
+
+- (void)activate
+{
+    %orig;
+
+    // Force keys to redraw to prevent cached uppercase letters from showing
+    // FIXME: Determine why redraw is needed and prevent this need.
+    UIKeyboardImpl *impl = [objc_getClass("UIKeyboardImpl") activeInstance];
+    if (impl != nil) {
+        UIKeyboardLayout *m_layout = MSHookIvar<UIKeyboardLayout *>(impl, "m_layout");
+        if ([m_layout isKindOfClass:objc_getClass("UIKeyboardLayoutStar")])
+            updateKeyplaneView(m_layout);
+    }
+}
+
+%end %end
+
+//==============================================================================
+
+%hook UIKeyboardLayoutStar
+
+- (void)setShift:(BOOL)shift
+{
+    BOOL currentShiftState = self.shift;
+
+    %orig;
+
+    // If shift state changed, force keys to redraw
+    if (currentShiftState != shift)
+        updateKeyplaneView(self);
+}
+
+%end
+
+//==============================================================================
+
+%hook UIKBKeyplaneView
+
+- (id)cacheKey
+{
+    id result = %orig;
+
+    // Get reference to layout in order to determine shift state
+    UIKeyboardLayoutStar *layout = nil;
+    if ([self respondsToSelector:@selector(layout)]) {
+        layout = self.layout;
+    } else {
+        UIKeyboardImpl *impl = [objc_getClass("UIKeyboardImpl") activeInstance];
+        if (impl != nil) {
+            layout = MSHookIvar<UIKeyboardLayoutStar *>(impl, "m_layout");
+        }
+    }
+
+    // If shift is currently enabled, return identifier for uppercase instead of lower.
+    return layout.shift ? [result stringByReplacingOccurrencesOfString:@"small" withString:@"capital"] : result;
+}
+
+%end
+
+//==============================================================================
+
+// If key represents a lowercase letter, then actually return a lowercase letter
+#define HONOR_CASE \
+    NSString *result = %orig; \
+    return [self.name hasPrefix:@"Latin-Small"] ? [result lowercaseString] : result;
+
+%hook UIKBKey %group GFirmware4x
+- (NSString *)displayString { HONOR_CASE }
+%end %end
+
+%hook UIKBTree %group GFirmware5x
+- (NSString *)displayString { HONOR_CASE }
+%end %end
+
+//==============================================================================
+
+%hook SpringBoard %group GSpringBoard
+
+- (void)applicationDidFinishLaunching:(id)application
+{
+    %orig;
+
+    // Clear the keyboard cache to prevent old images from interfering
+    // NOTE: This should only be necessary upon first install, though it is
+    //       conceivable that cached files from Safe Mode could later cause
+    //       issues.
+    // NOTE: Cache path for keyboard images is:
+    //       /var/mobile/Library/Caches/com.apple.keyboard/images
+    Class $UIKeyboardCache = objc_getClass("UIKeyboardCache");
+    if ($UIKeyboardCache != nil) {
+        UIKeyboardCache *cache = [$UIKeyboardCache sharedInstance];
+        CPBitmapStore *_store = MSHookIvar<id>(cache, "_store");
+        [_store removeImagesInGroups:[_store allGroups]];
+    }
+}
+
+%end %end
+
+//==============================================================================
+
+__attribute__((constructor)) static void init()
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
+    // Setup hooks
+    %init;
+
+    // Setup firmware-dependent hooks
+    if (objc_getClass("UIKBTree") != nil) {
+        %init(GFirmware5x);
+    } else {
+        %init(GFirmware4x);
+    }
+
+    // Setup app-dependent hooks
+    NSString *identifier = [[NSBundle mainBundle] bundleIdentifier];
+    if ([identifier isEqualToString:@"com.apple.springboard"]) {
+        %init(GSpringBoard);
+    }
+
+    [pool release];
+}
+
+/* vim: set filetype=objcpp sw=4 ts=4 sts=4 expandtab textwidth=80 ff=unix: */

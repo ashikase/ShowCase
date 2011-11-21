@@ -1,5 +1,5 @@
 TWEAK_NAME = ShowCase
-ShowCase_OBJCC_FILES = Tweak.mm
+ShowCase_OBJCC_FILES = Tweak.xmi
 ShowCase_CFLAGS = -F$(SYSROOT)/System/Library/CoreServices
 
 include theos/makefiles/common.mk
