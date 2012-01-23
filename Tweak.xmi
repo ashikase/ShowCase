@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2012-01-23 17:46:29
+ * Last-modified: 2012-01-23 17:53:59
  */
 
 
@@ -58,8 +58,9 @@
 static inline void updateKeyplaneView(id object)
 {
     UIKBKeyplaneView *_keyplaneView = NULL;
-    if (object_getInstanceVariable(object, "_keyplaneView", (void **)&_keyplaneView) == NULL)
+    if (object_getInstanceVariable(object, "_keyplaneView", (void **)&_keyplaneView) == NULL) {
         object_getInstanceVariable(object, "m_keyplaneView", (void **)&_keyplaneView);
+    }
     [_keyplaneView setNeedsDisplay];
 }
 
@@ -76,8 +77,9 @@ static inline void updateKeyplaneView(id object)
     UIKeyboardImpl *impl = [objc_getClass("UIKeyboardImpl") activeInstance];
     if (impl != nil) {
         UIKeyboardLayout *m_layout = MSHookIvar<UIKeyboardLayout *>(impl, "m_layout");
-        if ([m_layout isKindOfClass:objc_getClass("UIKeyboardLayoutStar")])
+        if ([m_layout isKindOfClass:objc_getClass("UIKeyboardLayoutStar")]) {
             updateKeyplaneView(m_layout);
+        }
     }
 }
 
@@ -94,8 +96,9 @@ static inline void updateKeyplaneView(id object)
     %orig;
 
     // If shift state changed, force keys to redraw
-    if (currentShiftState != shift)
+    if (currentShiftState != shift) {
         updateKeyplaneView(self);
+    }
 }
 
 %end
