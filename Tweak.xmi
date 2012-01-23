@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2011-11-06 19:58:04
+ * Last-modified: 2012-01-23 17:46:29
  */
 
 
@@ -166,6 +166,8 @@ static inline void updateKeyplaneView(id object)
 
 //==============================================================================
 
+#define kCFCoreFoundationVersionNumber_iOS_5_0 661.00
+
 __attribute__((constructor)) static void init()
 {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -174,7 +176,7 @@ __attribute__((constructor)) static void init()
     %init;
 
     // Setup firmware-dependent hooks
-    if (objc_getClass("UIKBTree") != nil) {
+    if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_5_0) {
         %init(GFirmware5x);
     } else {
         %init(GFirmware4x);
