@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2012-01-24 15:26:49
+ * Last-modified: 2012-01-24 15:45:11
  */
 
 
@@ -15,10 +15,6 @@
 // Class declarations
 // NOTE: These are not 100% accurate; protocol information has been stripped,
 //       and super classes may change between firmware versions.
-@interface CALayer : NSObject
-- (void)_display;
-@end
-
 @interface CPBitmapStore : NSObject
 - (id)allGroups;
 - (void)removeImagesInGroups:(id)groups;
