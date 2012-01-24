@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2012-01-23 17:53:59
+ * Last-modified: 2012-01-24 15:26:49
  */
 
 
@@ -35,6 +35,7 @@
 
 @interface UIKeyboardLayout : UIView @end
 @interface UIKeyboardLayoutStar : UIKeyboardLayout
+@property(copy, nonatomic) NSString *keyplaneName;
 @property(assign, nonatomic) BOOL shift;
 @end
 
@@ -64,39 +65,16 @@ static inline void updateKeyplaneView(id object)
     [_keyplaneView setNeedsDisplay];
 }
 
-//==============================================================================
-
-%hook UIKeyboard %group GFirmware4x
-
-- (void)activate
-{
-    %orig;
-
-    // Force keys to redraw to prevent cached uppercase letters from showing
-    // FIXME: Determine why redraw is needed and prevent this need.
-    UIKeyboardImpl *impl = [objc_getClass("UIKeyboardImpl") activeInstance];
-    if (impl != nil) {
-        UIKeyboardLayout *m_layout = MSHookIvar<UIKeyboardLayout *>(impl, "m_layout");
-        if ([m_layout isKindOfClass:objc_getClass("UIKeyboardLayoutStar")]) {
-            updateKeyplaneView(m_layout);
-        }
-    }
-}
-
-%end %end
-
-//==============================================================================
-
 %hook UIKeyboardLayoutStar
 
-- (void)setShift:(BOOL)shift
+- (void)setKeyplaneName:(id)name
 {
-    BOOL currentShiftState = self.shift;
+    NSString *oldName = self.keyplaneName;
 
     %orig;
 
-    // If shift state changed, force keys to redraw
-    if (currentShiftState != shift) {
+    // If keyplane name changed, force a redraw
+    if (name != nil && ![name isEqualToString:oldName]) {
         updateKeyplaneView(self);
     }
 }
