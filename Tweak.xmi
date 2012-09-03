@@ -107,7 +107,7 @@ static inline void updateKeyplaneView(id object)
 // If key represents a lowercase letter, then actually return a lowercase letter
 #define HONOR_CASE \
     NSString *result = %orig; \
-    return [self.name hasPrefix:@"Latin-Small"] ? [result lowercaseString] : result;
+    return [self.name rangeOfString:@"-Small-"].location != NSNotFound ? [result lowercaseString] : result;
 
 %hook UIKBKey %group GFirmware4x
 - (NSString *)displayString { HONOR_CASE }
