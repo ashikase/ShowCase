@@ -14,3 +14,7 @@ include theos/makefiles/tweak.mk
 sync: stage
 	rsync -z _/Library/MobileSubstrate/DynamicLibraries/* root@iphone:/Library/MobileSubstrate/DynamicLibraries/
 	ssh root@iphone killall SpringBoard
+
+distclean: clean
+	- rm -f $(THEOS_PROJECT_DIR)/$(APP_ID)*.deb
+	- rm -f $(THEOS_PROJECT_DIR)/.theos/packages/*
