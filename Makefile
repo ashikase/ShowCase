@@ -2,6 +2,8 @@ TWEAK_NAME = ShowCase
 ShowCase_OBJCC_FILES = Tweak.xmi
 ShowCase_CFLAGS = -F$(SYSROOT)/System/Library/CoreServices
 
+export ARCHS =
+
 # Uncomment the following lines when compiling with self-built version of LLVM/Clang
 #export GO_EASY_ON_ME = 1
 #export SDKTARGET = arm-apple-darwin11
