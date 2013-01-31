@@ -118,11 +118,11 @@ static inline void updateKeyplaneView(id object)
     NSString *result = %orig; \
     return [self.name rangeOfString:@"-Small-"].location != NSNotFound ? [result lowercaseString] : result;
 
-%hook UIKBKey %group GFirmware4x
+%hook UIKBKey %group GFirmware_LT_50
 - (NSString *)displayString { HONOR_CASE }
 %end %end
 
-%hook UIKBTree %group GFirmware5x
+%hook UIKBTree %group GFirmware_GTE_50
 - (NSString *)displayString { HONOR_CASE }
 %end %end
 
@@ -166,9 +166,9 @@ __attribute__((constructor)) static void init()
 
     // Setup firmware-dependent hooks
     if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_5_0) {
-        %init(GFirmware5x);
+        %init(GFirmware_GTE_50);
     } else {
-        %init(GFirmware4x);
+        %init(GFirmware_LT_50);
     }
 
     // Setup app-dependent hooks
