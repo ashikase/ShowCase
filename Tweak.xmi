@@ -12,12 +12,21 @@
 
 #include <objc/runtime.h>
 
+#ifndef kCFCoreFoundationVersionNumber_iOS_5_0
+#define kCFCoreFoundationVersionNumber_iOS_5_0 675.00
+#endif
+
+#ifndef kCFCoreFoundationVersionNumber_iOS_6_0
+#define kCFCoreFoundationVersionNumber_iOS_6_0 793.00
+#endif
+
 // Class declarations
 // NOTE: These are not 100% accurate; protocol information has been stripped,
 //       and super classes may change between firmware versions.
 @interface CPBitmapStore : NSObject
 - (id)allGroups;
 - (void)removeImagesInGroups:(id)groups;
+- (void)purge;
 @end
 
 // 4.2.1+
@@ -135,15 +144,18 @@ static inline void updateKeyplaneView(id object)
     if ($UIKeyboardCache != nil) {
         UIKeyboardCache *cache = [$UIKeyboardCache sharedInstance];
         CPBitmapStore *_store = MSHookIvar<id>(cache, "_store");
-        [_store removeImagesInGroups:[_store allGroups]];
+        // FIXME: Consider using purge method for older firmware as well.
+        if (kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber_iOS_6_0) {
+            [_store removeImagesInGroups:[_store allGroups]];
+        } else {
+            [_store purge];
+        }
     }
 }
 
 %end %end
 
 //==============================================================================
-
-#define kCFCoreFoundationVersionNumber_iOS_5_0 661.00
 
 __attribute__((constructor)) static void init()
 {
