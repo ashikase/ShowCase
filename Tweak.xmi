@@ -29,11 +29,6 @@
 - (void)purge;
 @end
 
-// 4.2.1+
-@interface UIKeyboardCache : NSObject
-+ (id)sharedInstance;
-@end
-
 @interface UIKeyboardImpl : UIView
 + (id)activeInstance;
 @end
@@ -54,7 +49,12 @@
 @property(copy, nonatomic) NSString *name;
 @end
 
-// 5.x
+// 4.2.1+
+@interface UIKeyboardCache : NSObject
++ (id)sharedInstance;
+@end
+
+// 5.0+
 @interface UIKBTree : NSObject
 @property(copy, nonatomic) NSString *name;
 @end
