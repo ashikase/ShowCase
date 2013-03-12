@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2012-01-24 15:45:11
+ * Last-modified: 2013-03-05 19:16:54
  */
 
 
@@ -58,6 +58,14 @@
 @interface UIKBTree : NSObject
 @property(copy, nonatomic) NSString *name;
 @end
+
+//==============================================================================
+
+%hook UIKeyboardCache %group GFirmware_GTE_60
+
++ (BOOL)enabled { return NO; }
+
+%end %end
 
 //==============================================================================
 
@@ -144,12 +152,7 @@ static inline void updateKeyplaneView(id object)
     if ($UIKeyboardCache != nil) {
         UIKeyboardCache *cache = [$UIKeyboardCache sharedInstance];
         CPBitmapStore *_store = MSHookIvar<id>(cache, "_store");
-        // FIXME: Consider using purge method for older firmware as well.
-        if (kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber_iOS_6_0) {
-            [_store removeImagesInGroups:[_store allGroups]];
-        } else {
-            [_store purge];
-        }
+        [_store removeImagesInGroups:[_store allGroups]];
     }
 }
 
@@ -171,10 +174,16 @@ __attribute__((constructor)) static void init()
         %init(GFirmware_LT_50);
     }
 
+    if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_6_0) {
+        %init(GFirmware_GTE_60);
+    }
+
     // Setup app-dependent hooks
     NSString *identifier = [[NSBundle mainBundle] bundleIdentifier];
     if ([identifier isEqualToString:@"com.apple.springboard"]) {
-        %init(GSpringBoard);
+        if (kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber_iOS_6_0) {
+            %init(GSpringBoard);
+        }
     }
 
     [pool release];
