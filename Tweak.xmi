@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2013-11-07 14:06:17
+ * Last-modified: 2013-11-07 14:08:18
  */
 
 
@@ -34,10 +34,6 @@
 @end
 
 @interface UIKBKeyplaneView : UIView @end
-@interface UIKBKeyplaneView (Firmware5x)
-@property(assign, nonatomic) UIKeyboardLayoutStar *layout;
-@end
-
 @interface UIKBShape : NSObject @end
 @interface UIKBKey : UIKBShape
 @property(copy, nonatomic) NSString *name;
