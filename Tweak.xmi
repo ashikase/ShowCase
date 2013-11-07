@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2013-11-07 16:13:17
+ * Last-modified: 2013-11-07 16:14:30
  */
 
 
@@ -174,7 +174,7 @@ static BOOL shouldFixCase$ = NO;
 
 //==============================================================================
 
-__attribute__((constructor)) static void init()
+%ctor
 {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
