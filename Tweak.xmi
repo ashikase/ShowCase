@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2013-11-07 14:09:19
+ * Last-modified: 2013-11-07 15:53:50
  */
 
 
@@ -60,7 +60,7 @@ static inline void updateKeyplaneView(id object)
     [_keyplaneView setNeedsDisplay];
 }
 
-%hook UIKeyboardLayoutStar
+%hook UIKeyboardLayoutStar %group GFirmware_LT_50
 
 - (void)setKeyplaneName:(id)name
 {
@@ -74,7 +74,7 @@ static inline void updateKeyplaneView(id object)
     }
 }
 
-%end
+%end %end
 
 //==============================================================================
 
