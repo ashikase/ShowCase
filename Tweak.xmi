@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2013-03-05 19:16:54
+ * Last-modified: 2013-11-07 13:52:10
  */
 
 
@@ -61,14 +61,6 @@
 
 //==============================================================================
 
-%hook UIKeyboardCache %group GFirmware_GTE_60
-
-+ (BOOL)enabled { return NO; }
-
-%end %end
-
-//==============================================================================
-
 static inline void updateKeyplaneView(id object)
 {
     UIKBKeyplaneView *_keyplaneView = NULL;
@@ -96,7 +88,35 @@ static inline void updateKeyplaneView(id object)
 
 //==============================================================================
 
-%hook UIKBKeyplaneView
+static BOOL shouldFixCase$ = NO;
+
+%hook UIKBTree %group GFirmware_GTE_50
+
+- (id)shiftAlternateKeyplaneName
+{
+    // NOTE: While we could simply hook just this method and always convert
+    // "small" to "capital", doing so results in the keyboard always showing
+    // capital letters.
+    // TODO: Determine why the above issue occurs.
+    id result = %orig();
+    return (shouldFixCase$ && [result isEqualToString:@"small-letters"]) ? @"capital-letters" : result;
+}
+
+%end %end
+
+%hook UIKeyboardLayoutStar %group GFirmware_GTE_50
+
+- (id)cachedKeyplaneNameForKeyplane:(id)keyplane
+{
+    shouldFixCase$ = YES;
+    id result = %orig();
+    shouldFixCase$ = NO;
+    return result;
+}
+
+%end %end
+
+%hook UIKBKeyplaneView %group GFirmware_LT_50
 
 - (id)cacheKey
 {
@@ -104,20 +124,16 @@ static inline void updateKeyplaneView(id object)
 
     // Get reference to layout in order to determine shift state
     UIKeyboardLayoutStar *layout = nil;
-    if ([self respondsToSelector:@selector(layout)]) {
-        layout = self.layout;
-    } else {
-        UIKeyboardImpl *impl = [objc_getClass("UIKeyboardImpl") activeInstance];
-        if (impl != nil) {
-            layout = MSHookIvar<UIKeyboardLayoutStar *>(impl, "m_layout");
-        }
+    UIKeyboardImpl *impl = [objc_getClass("UIKeyboardImpl") activeInstance];
+    if (impl != nil) {
+        layout = MSHookIvar<UIKeyboardLayoutStar *>(impl, "m_layout");
     }
 
     // If shift is currently enabled, return identifier for uppercase instead of lower.
     return layout.shift ? [result stringByReplacingOccurrencesOfString:@"small" withString:@"capital"] : result;
 }
 
-%end
+%end %end
 
 //==============================================================================
 
@@ -152,7 +168,12 @@ static inline void updateKeyplaneView(id object)
     if ($UIKeyboardCache != nil) {
         UIKeyboardCache *cache = [$UIKeyboardCache sharedInstance];
         CPBitmapStore *_store = MSHookIvar<id>(cache, "_store");
-        [_store removeImagesInGroups:[_store allGroups]];
+        // FIXME: Consider using purge method for older firmware as well.
+        if (kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber_iOS_6_0) {
+            [_store removeImagesInGroups:[_store allGroups]];
+        } else {
+            [_store purge];
+        }
     }
 }
 
@@ -174,16 +195,10 @@ __attribute__((constructor)) static void init()
         %init(GFirmware_LT_50);
     }
 
-    if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_6_0) {
-        %init(GFirmware_GTE_60);
-    }
-
     // Setup app-dependent hooks
     NSString *identifier = [[NSBundle mainBundle] bundleIdentifier];
     if ([identifier isEqualToString:@"com.apple.springboard"]) {
-        if (kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber_iOS_6_0) {
-            %init(GSpringBoard);
-        }
+        %init(GSpringBoard);
     }
 
     [pool release];
