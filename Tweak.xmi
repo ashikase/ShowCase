@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2013-11-07 15:53:50
+ * Last-modified: 2013-11-07 16:13:17
  */
 
 
@@ -51,6 +51,9 @@
 
 //==============================================================================
 
+// DESC: Force redraw of keyboard when keyplane name changes (e.g., from "small"
+//       to "capital").
+
 static inline void updateKeyplaneView(id object)
 {
     UIKBKeyplaneView *_keyplaneView = NULL;
@@ -77,6 +80,9 @@ static inline void updateKeyplaneView(id object)
 %end %end
 
 //==============================================================================
+
+// DESC: Use separate cache keys for "small" and "capital" keyplanes.
+// NOTE: By default, iOS uses the same key ("small-letters") for both cases.
 
 static BOOL shouldFixCase$ = NO;
 
@@ -127,7 +133,9 @@ static BOOL shouldFixCase$ = NO;
 
 //==============================================================================
 
-// If key represents a lowercase letter, then actually return a lowercase letter
+// DESC: If key represents a lowercase letter, then actually return a lowercase
+//       letter.
+
 #define HONOR_CASE \
     NSString *result = %orig(); \
     return [self.name rangeOfString:@"-Small-"].location != NSNotFound ? [result lowercaseString] : result;
@@ -142,18 +150,18 @@ static BOOL shouldFixCase$ = NO;
 
 //==============================================================================
 
+// DESC: Clear the keyboard cache to remove any old images that display all
+//       capital letters for lowercase (i.e., images that either existed before
+//       installation of this extension or were generated while in Safe Mode).
+// NOTE: Cache path for keyboard images is:
+//       /var/mobile/Library/Caches/com.apple.keyboard/images
+
 %hook SpringBoard %group GSpringBoard
 
 - (void)applicationDidFinishLaunching:(id)application
 {
     %orig();
 
-    // Clear the keyboard cache to prevent old images from interfering
-    // NOTE: This should only be necessary upon first install, though it is
-    //       conceivable that cached files from Safe Mode could later cause
-    //       issues.
-    // NOTE: Cache path for keyboard images is:
-    //       /var/mobile/Library/Caches/com.apple.keyboard/images
     Class $UIKeyboardCache = objc_getClass("UIKeyboardCache");
     if ($UIKeyboardCache != nil) {
         UIKeyboardCache *cache = [$UIKeyboardCache sharedInstance];
