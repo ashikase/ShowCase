@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2013-11-07 16:43:39
+ * Last-modified: 2013-11-07 16:44:49
  */
 
 
@@ -48,38 +48,6 @@
 @interface UIKBTree : NSObject
 @property(copy, nonatomic) NSString *name;
 @end
-
-//==============================================================================
-
-// DESC: Force redraw of keyboard when keyplane name changes (e.g., from "small"
-//       to "capital").
-// NOTE: This does not appear to be necessary in iOS version 5.0 ~ 6.1.x.
-// TODO: Determine why this is once again necessary in 7.0.
-
-static inline void updateKeyplaneView(id object)
-{
-    UIKBKeyplaneView *_keyplaneView = NULL;
-    if (object_getInstanceVariable(object, "_keyplaneView", (void **)&_keyplaneView) == NULL) {
-        object_getInstanceVariable(object, "m_keyplaneView", (void **)&_keyplaneView);
-    }
-    [_keyplaneView setNeedsDisplay];
-}
-
-%hook UIKeyboardLayoutStar
-
-- (void)setKeyplaneName:(id)name
-{
-    NSString *oldName = self.keyplaneName;
-
-    %orig();
-
-    // If keyplane name changed, force a redraw
-    if (name != nil && ![name isEqualToString:oldName]) {
-        updateKeyplaneView(self);
-    }
-}
-
-%end
 
 //==============================================================================
 
@@ -149,6 +117,38 @@ static BOOL shouldFixCase$ = NO;
 %hook UIKBTree %group GFirmware_GTE_50
 - (NSString *)displayString { HONOR_CASE }
 %end %end
+
+//==============================================================================
+
+// DESC: Force redraw of keyboard when keyplane name changes (e.g., from "small"
+//       to "capital").
+// NOTE: This does not appear to be necessary in iOS version 5.0 ~ 6.1.x.
+// TODO: Determine why this is once again necessary in 7.0.
+
+static inline void updateKeyplaneView(id object)
+{
+    UIKBKeyplaneView *_keyplaneView = NULL;
+    if (object_getInstanceVariable(object, "_keyplaneView", (void **)&_keyplaneView) == NULL) {
+        object_getInstanceVariable(object, "m_keyplaneView", (void **)&_keyplaneView);
+    }
+    [_keyplaneView setNeedsDisplay];
+}
+
+%hook UIKeyboardLayoutStar
+
+- (void)setKeyplaneName:(id)name
+{
+    NSString *oldName = self.keyplaneName;
+
+    %orig();
+
+    // If keyplane name changed, force a redraw
+    if (name != nil && ![name isEqualToString:oldName]) {
+        updateKeyplaneView(self);
+    }
+}
+
+%end
 
 //==============================================================================
 
