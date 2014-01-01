@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2014-01-01 22:53:17
+ * Last-modified: 2014-01-01 23:09:23
  */
 
 
@@ -14,10 +14,6 @@
 
 #ifndef kCFCoreFoundationVersionNumber_iOS_5_0
 #define kCFCoreFoundationVersionNumber_iOS_5_0 675.00
-#endif
-
-#ifndef kCFCoreFoundationVersionNumber_iOS_6_0
-#define kCFCoreFoundationVersionNumber_iOS_6_0 793.00
 #endif
 
 #ifndef kCFCoreFoundationVersionNumber_iOS_7_0
@@ -66,6 +62,10 @@
 //       crash in certain cases, resulting in an all-black keyboard afterwards.
 // NOTE: With this code in place, overriding cacheKey and setKeyplaneName: is
 //       technically not needed.
+// NOTE: While the crash does not occur on iOS 5, this fix is still needed in
+//       order for the keyboard to refresh. This may have something to do with
+//       the fact that the cacheKey value on iOS 5/6 is lowercase (whereas it is
+//       uppercase on iOS 4/7).
 // TODO: Determine the cause of this issue, provide a better fix.
 
 // NOTE: To reproduce the issue (when the following code is not present):
@@ -76,7 +76,7 @@
 
 static BOOL shouldFixCase$ = NO;
 
-%hook UIKBTree %group GFirmware_GTE_60_LT_70
+%hook UIKBTree %group GFirmware_GTE_50_LT_70
 
 - (id)shiftAlternateKeyplaneName
 {
@@ -90,7 +90,7 @@ static BOOL shouldFixCase$ = NO;
 
 %end %end
 
-%hook UIKeyboardLayoutStar %group GFirmware_GTE_60_LT_70
+%hook UIKeyboardLayoutStar %group GFirmware_GTE_50_LT_70
 
 - (id)cachedKeyplaneNameForKeyplane:(id)keyplane
 {
@@ -211,9 +211,9 @@ static inline void updateKeyplaneView(id object)
         %c(UIKBTree) : %c(UIKBKey);
     %init(GHonorCase, KBKeyTree = $KBKeyTree);
 
-    if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_6_0 &&
+    if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_5_0 &&
             kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber_iOS_7_0) {
-        %init(GFirmware_GTE_60_LT_70);
+        %init(GFirmware_GTE_50_LT_70);
     }
 
     // Setup app-dependent hooks
