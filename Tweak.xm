@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2014-01-01 21:52:26
+ * Last-modified: 2014-01-01 22:08:42
  */
 
 
@@ -23,20 +23,22 @@
 - (void)purge;
 @end
 
-@interface UIKeyboardImpl : UIView
-+ (id)activeInstance;
+@interface UIKBShape : NSObject @end
+@interface UIKBKey : UIKBShape
+@property(copy, nonatomic) NSString *name;
+@end
+
+@interface UIKBKeyplane : NSObject
+- (BOOL)isShiftKeyplane;
+@end
+
+@interface UIKBKeyplaneView : UIView
+@property(retain, nonatomic) UIKBKeyplane *keyplane;
 @end
 
 @interface UIKeyboardLayout : UIView @end
 @interface UIKeyboardLayoutStar : UIKeyboardLayout
 @property(copy, nonatomic) NSString *keyplaneName;
-@property(assign, nonatomic) BOOL shift;
-@end
-
-@interface UIKBKeyplaneView : UIView @end
-@interface UIKBShape : NSObject @end
-@interface UIKBKey : UIKBShape
-@property(copy, nonatomic) NSString *name;
 @end
 
 // 4.2.1+
@@ -47,6 +49,7 @@
 // 5.0+
 @interface UIKBTree : NSObject
 @property(copy, nonatomic) NSString *name;
+- (BOOL)isShiftKeyplane;
 @end
 
 //==============================================================================
@@ -54,52 +57,26 @@
 // DESC: Use separate cache keys for "small" and "capital" keyplanes.
 // NOTE: By default, iOS uses the same key ("small-letters") for both cases.
 
-static BOOL shouldFixCase$ = NO;
+// NOTE: While iOS 3.1 contains this method (as well as UIKeyboardCache), it
+//       appears that it is not actually used until a later iOS version.
+// TODO: Determine from which iOS version this is actually used.
 
-%hook UIKBTree %group GFirmware_GTE_50
+%hook UIKBKeyplaneView
 
-- (id)shiftAlternateKeyplaneName
+- (NSString *)cacheKey
 {
-    // NOTE: While we could simply hook just this method and always convert
-    // "small" to "capital", doing so results in the keyboard always showing
-    // capital letters.
-    // TODO: Determine why the above issue occurs.
-    id result = %orig();
-    return (shouldFixCase$ && [result isEqualToString:@"small-letters"]) ? @"capital-letters" : result;
-}
+    NSString *result = %orig();
+    if ([[self keyplane] isShiftKeyplane]) {
+        // iOS 4.2.1, 7.0.4
+        result = [result stringByReplacingOccurrencesOfString:@"Small" withString:@"Capital"];
 
-%end %end
-
-%hook UIKeyboardLayoutStar %group GFirmware_GTE_50
-
-- (id)cachedKeyplaneNameForKeyplane:(id)keyplane
-{
-    shouldFixCase$ = YES;
-    id result = %orig();
-    shouldFixCase$ = NO;
+        // iOS 5.1.1, 6.1.2
+        result = [result stringByReplacingOccurrencesOfString:@"small" withString:@"capital"];
+    }
     return result;
 }
 
-%end %end
-
-%hook UIKBKeyplaneView %group GFirmware_LT_50
-
-- (id)cacheKey
-{
-    id result = %orig();
-
-    // Get reference to layout in order to determine shift state
-    UIKeyboardLayoutStar *layout = nil;
-    UIKeyboardImpl *impl = [objc_getClass("UIKeyboardImpl") activeInstance];
-    if (impl != nil) {
-        layout = MSHookIvar<UIKeyboardLayoutStar *>(impl, "m_layout");
-    }
-
-    // If shift is currently enabled, return identifier for uppercase instead of lower.
-    return layout.shift ? [result stringByReplacingOccurrencesOfString:@"small" withString:@"capital"] : result;
-}
-
-%end %end
+%end
 
 //==============================================================================
 
@@ -120,8 +97,6 @@ static BOOL shouldFixCase$ = NO;
 
 // DESC: Force redraw of keyboard when keyplane name changes (e.g., from "small"
 //       to "capital").
-// NOTE: This does not appear to be necessary in iOS version 5.0 ~ 6.1.x.
-// TODO: Determine why this is once again necessary in 7.0.
 
 static inline void updateKeyplaneView(id object)
 {
@@ -182,11 +157,6 @@ static inline void updateKeyplaneView(id object)
     %init;
 
     // Setup firmware-dependent hooks
-    if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_5_0) {
-        %init(GFirmware_GTE_50);
-    } else {
-        %init(GFirmware_LT_50);
-    }
     Class $KBKeyTree = (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_5_0) ?
         %c(UIKBTree) : %c(UIKBKey);
     %init(GHonorCase, KBKeyTree = $KBKeyTree);
