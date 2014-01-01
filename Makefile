@@ -1,5 +1,5 @@
 TWEAK_NAME = ShowCase
-ShowCase_OBJCC_FILES = Tweak.xmi
+ShowCase_OBJCC_FILES = Tweak.xm
 ShowCase_CFLAGS = -F$(SYSROOT)/System/Library/CoreServices
 
 export ARCHS =

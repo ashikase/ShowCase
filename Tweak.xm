@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2013-11-07 16:44:49
+ * Last-modified: 2014-01-01 21:52:26
  */
 
 
@@ -106,16 +106,14 @@ static BOOL shouldFixCase$ = NO;
 // DESC: If key represents a lowercase letter, then actually return a lowercase
 //       letter.
 
-#define HONOR_CASE \
-    NSString *result = %orig(); \
-    return [self.name rangeOfString:@"-Small-"].location != NSNotFound ? [result lowercaseString] : result;
+%hook KBKeyTree %group GHonorCase
 
-%hook UIKBKey %group GFirmware_LT_50
-- (NSString *)displayString { HONOR_CASE }
-%end %end
+- (NSString *)displayString
+{
+    NSString *result = %orig();
+    return [[self name] rangeOfString:@"-Small-"].location != NSNotFound ? [result lowercaseString] : result;
+}
 
-%hook UIKBTree %group GFirmware_GTE_50
-- (NSString *)displayString { HONOR_CASE }
 %end %end
 
 //==============================================================================
@@ -189,6 +187,9 @@ static inline void updateKeyplaneView(id object)
     } else {
         %init(GFirmware_LT_50);
     }
+    Class $KBKeyTree = (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_5_0) ?
+        %c(UIKBTree) : %c(UIKBKey);
+    %init(GHonorCase, KBKeyTree = $KBKeyTree);
 
     // Setup app-dependent hooks
     NSString *identifier = [[NSBundle mainBundle] bundleIdentifier];
