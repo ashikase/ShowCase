@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2014-01-01 22:08:42
+ * Last-modified: 2014-01-01 22:53:17
  */
 
 
@@ -14,6 +14,14 @@
 
 #ifndef kCFCoreFoundationVersionNumber_iOS_5_0
 #define kCFCoreFoundationVersionNumber_iOS_5_0 675.00
+#endif
+
+#ifndef kCFCoreFoundationVersionNumber_iOS_6_0
+#define kCFCoreFoundationVersionNumber_iOS_6_0 793.00
+#endif
+
+#ifndef kCFCoreFoundationVersionNumber_iOS_7_0
+#define kCFCoreFoundationVersionNumber_iOS_7_0 847.20
 #endif
 
 // Class declarations
@@ -51,6 +59,48 @@
 @property(copy, nonatomic) NSString *name;
 - (BOOL)isShiftKeyplane;
 @end
+
+//==============================================================================
+
+// DESC: On iOS 6.x, a bug existed with ShowCase which caused the Notes app to
+//       crash in certain cases, resulting in an all-black keyboard afterwards.
+// NOTE: With this code in place, overriding cacheKey and setKeyplaneName: is
+//       technically not needed.
+// TODO: Determine the cause of this issue, provide a better fix.
+
+// NOTE: To reproduce the issue (when the following code is not present):
+//       1. Open Notes, create a new note with the word (for example) "Test".
+//       2. Respring.
+//       3. Open Notes, immediately tap the note to bring up the keyboard.
+//       4. Immediately tap the shift key.
+
+static BOOL shouldFixCase$ = NO;
+
+%hook UIKBTree %group GFirmware_GTE_60_LT_70
+
+- (id)shiftAlternateKeyplaneName
+{
+    // NOTE: While we could simply hook just this method and always convert
+    // "small" to "capital", doing so results in the keyboard always showing
+    // capital letters.
+    // TODO: Determine why the above issue occurs.
+    id result = %orig();
+    return (shouldFixCase$ && [result isEqualToString:@"small-letters"]) ? @"capital-letters" : result;
+}
+
+%end %end
+
+%hook UIKeyboardLayoutStar %group GFirmware_GTE_60_LT_70
+
+- (id)cachedKeyplaneNameForKeyplane:(id)keyplane
+{
+    shouldFixCase$ = YES;
+    id result = %orig();
+    shouldFixCase$ = NO;
+    return result;
+}
+
+%end %end
 
 //==============================================================================
 
@@ -160,6 +210,11 @@ static inline void updateKeyplaneView(id object)
     Class $KBKeyTree = (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_5_0) ?
         %c(UIKBTree) : %c(UIKBKey);
     %init(GHonorCase, KBKeyTree = $KBKeyTree);
+
+    if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_6_0 &&
+            kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber_iOS_7_0) {
+        %init(GFirmware_GTE_60_LT_70);
+    }
 
     // Setup app-dependent hooks
     NSString *identifier = [[NSBundle mainBundle] bundleIdentifier];
