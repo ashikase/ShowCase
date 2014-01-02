@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2014-01-01 23:09:23
+ * Last-modified: 2014-01-02 22:45:15
  */
 
 
@@ -30,6 +30,7 @@
 @interface UIKBShape : NSObject @end
 @interface UIKBKey : UIKBShape
 @property(copy, nonatomic) NSString *name;
+- (NSString *)representedString;
 @end
 
 @interface UIKBKeyplane : NSObject
@@ -54,6 +55,7 @@
 @interface UIKBTree : NSObject
 @property(copy, nonatomic) NSString *name;
 - (BOOL)isShiftKeyplane;
+- (NSString *)representedString;
 @end
 
 //==============================================================================
@@ -130,15 +132,16 @@ static BOOL shouldFixCase$ = NO;
 
 //==============================================================================
 
-// DESC: If key represents a lowercase letter, then actually return a lowercase
-//       letter.
+// DESC: Return the letter that the key actually represents.
 
 %hook KBKeyTree %group GHonorCase
 
 - (NSString *)displayString
 {
-    NSString *result = %orig();
-    return [[self name] rangeOfString:@"-Small-"].location != NSNotFound ? [result lowercaseString] : result;
+    // NOTE: Only modify the result if the key represents a lowercase letter.
+    // NOTE: It might be safe to always return the 'full represented string',
+    //       but this has not been confirmed.
+    return ([[self name] rangeOfString:@"-Small-"].location != NSNotFound) ? [self representedString] : %orig();
 }
 
 %end %end
