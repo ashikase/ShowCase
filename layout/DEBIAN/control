@@ -1,6 +1,6 @@
 Package: jp.ashikase.showcase
 Name: ShowCase
-Version: 1.3.4
+Version: 1.3.4.1
 Architecture: iphoneos-arm
 Description: Make keyboard show current case.
 Homepage: http://github/ashikase/ShowCase/
