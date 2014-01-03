@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2014-01-02 22:45:15
+ * Last-modified: 2014-01-03 10:03:06
  */
 
 
@@ -138,10 +138,17 @@ static BOOL shouldFixCase$ = NO;
 
 - (NSString *)displayString
 {
+    NSString *result = nil;
+
     // NOTE: Only modify the result if the key represents a lowercase letter.
-    // NOTE: It might be safe to always return the 'full represented string',
-    //       but this has not been confirmed.
-    return ([[self name] rangeOfString:@"-Small-"].location != NSNotFound) ? [self representedString] : %orig();
+    // NOTE: Some keys, in particular several emoji, have no 'name' or
+    //       'represented' property. At one point this lead to returning nil
+    //       here, which caused crashing.
+    NSString *name = [self name];
+    if (name != nil && [name rangeOfString:@"-Small-"].location != NSNotFound) {
+        result = [self representedString];
+    }
+    return result ?: %orig();
 }
 
 %end %end
