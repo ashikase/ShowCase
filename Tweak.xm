@@ -134,20 +134,25 @@ static BOOL shouldFixCase$ = NO;
 
 // DESC: Return the letter that the key actually represents.
 
+static BOOL isLowercaseKeyplane$ = NO;
+
 %hook KBKeyTree %group GHonorCase
 
 - (NSString *)displayString
 {
     NSString *result = nil;
 
-    // NOTE: Only modify the result if the key represents a lowercase letter.
-    // NOTE: Some keys, in particular several emoji, have no 'name' or
-    //       'represented' property. At one point this lead to returning nil
-    //       here, which caused crashing.
-    NSString *name = [self name];
-    if (name != nil && [name rangeOfString:@"-Small-"].location != NSNotFound) {
-        result = [self representedString];
+    if (isLowercaseKeyplane$) {
+        // NOTE: Only modify the result if the key represents a lowercase letter.
+        // NOTE: Some keys, in particular several emoji, have no 'name' or
+        //       'represented' property. At one point this lead to returning nil
+        //       here, which caused crashing.
+        NSString *name = [self name];
+        if (name != nil && [name rangeOfString:@"-Small-"].location != NSNotFound) {
+            result = [self representedString];
+        }
     }
+
     return result ?: %orig();
 }
 
@@ -175,9 +180,14 @@ static inline void updateKeyplaneView(id object)
 
     %orig();
 
-    // If keyplane name changed, force a redraw
-    if (name != nil && ![name isEqualToString:oldName]) {
-        updateKeyplaneView(self);
+    if (name != nil) {
+        // If keyplane name changed, force a redraw
+        if (![name isEqualToString:oldName]) {
+            updateKeyplaneView(self);
+        }
+
+        // Mark if this keyplane represents lowercase letters.
+        isLowercaseKeyplane$ = ([name isEqualToString:@"small-letters"] || [name hasSuffix:@"Small-Letters"]);
     }
 }
 
