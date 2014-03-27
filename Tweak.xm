@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2014-01-03 10:03:06
+ * Last-modified: 2014-03-27 16:19:10
  */
 
 
@@ -149,6 +149,12 @@ static BOOL isLowercaseKeyplane$ = NO;
         //       here, which caused crashing.
         NSString *name = [self name];
         if (name != nil && [name rangeOfString:@"-Small-"].location != NSNotFound) {
+            // NOTE: Technically this is incorrect; instead of the "represented"
+            //       entry, we should return the lowercase version of the
+            //       "display" entry.  However, this would require special cases
+            //       for Turkish dotted/dotless i.
+            //       With the current (above) checks in place, "represented"
+            //       seems to work well enough.
             result = [self representedString];
         }
     }
