@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2014-03-27 16:19:10
+ * Last-modified: 2014-06-22 22:10:45
  */
 
 
@@ -135,6 +135,18 @@ static BOOL shouldFixCase$ = NO;
 // DESC: Return the letter that the key actually represents.
 
 static BOOL isLowercaseKeyplane$ = NO;
+static BOOL isLoadingPopupVariants$ = NO;
+
+%hook UIKeyboardLayoutStar
+
+- (void)showPopupVariantsForKey:(id)key
+{
+    isLoadingPopupVariants$ = YES;
+    %orig();
+    isLoadingPopupVariants$ = NO;
+}
+
+%end
 
 %hook KBKeyTree %group GHonorCase
 
@@ -142,7 +154,7 @@ static BOOL isLowercaseKeyplane$ = NO;
 {
     NSString *result = nil;
 
-    if (isLowercaseKeyplane$) {
+    if (isLowercaseKeyplane$ && !isLoadingPopupVariants$) {
         // NOTE: Only modify the result if the key represents a lowercase letter.
         // NOTE: Some keys, in particular several emoji, have no 'name' or
         //       'represented' property. At one point this lead to returning nil
