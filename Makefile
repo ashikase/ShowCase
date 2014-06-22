@@ -12,9 +12,9 @@ export GO_EASY_ON_ME = 1
 include theos/makefiles/common.mk
 include theos/makefiles/tweak.mk
 
-sync: stage
-	rsync -z _/Library/MobileSubstrate/DynamicLibraries/* root@iphone:/Library/MobileSubstrate/DynamicLibraries/
-	ssh root@iphone killall SpringBoard
+after-install::
+	#install.exec "killall -9 SpringBoard"
+	install.exec "killall -9 backboardd"
 
 distclean: clean
 	- rm -f $(THEOS_PROJECT_DIR)/$(APP_ID)*.deb
