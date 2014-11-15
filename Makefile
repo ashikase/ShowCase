@@ -8,6 +8,9 @@ ARCHS := armv6 arm64
 include theos/makefiles/common.mk
 include theos/makefiles/tweak.mk
 
+before-install::
+	- install.exec "killall -9 MobileCydia"
+
 after-install::
 	#install.exec "killall -9 SpringBoard"
 	install.exec "killall -9 backboardd"
