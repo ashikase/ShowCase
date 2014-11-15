@@ -2,7 +2,7 @@ TWEAK_NAME = ShowCase
 ShowCase_OBJCC_FILES = Tweak.xm
 ShowCase_CFLAGS = -F$(SYSROOT)/System/Library/CoreServices
 
-TARGET := iphone:7.0:3.0
+TARGET := iphone:7.1:3.0
 ARCHS := armv6 arm64
 
 include theos/makefiles/common.mk
