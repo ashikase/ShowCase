@@ -6,7 +6,7 @@
  * Author: Lance Fetters (aka. ashikase)
  * License: New BSD (See LICENSE file for details)
  *
- * Last-modified: 2014-06-22 22:10:45
+ * Last-modified: 2014-11-15 14:00:05
  */
 
 
@@ -205,7 +205,7 @@ static inline void updateKeyplaneView(id object)
         }
 
         // Mark if this keyplane represents lowercase letters.
-        isLowercaseKeyplane$ = ([name isEqualToString:@"small-letters"] || [name hasSuffix:@"Small-Letters"]);
+        isLowercaseKeyplane$ = ([name hasPrefix:@"small-letters"] || [name hasSuffix:@"Small-Letters"]);
     }
 }
 
